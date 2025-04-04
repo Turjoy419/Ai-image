@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImagiGen - AI Image Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: white;
+            color: var(--primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            color: #666;
+        }
+        
+        .generator-box {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .input-group input, 
+        .input-group textarea, 
+        .input-group select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        .input-group input:focus, 
+        .input-group textarea:focus, 
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .prompt-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .settings-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .setting {
+            flex: 1;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .image-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 500px;
+            display: none;
+        }
+        
+        .image-preview .placeholder {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .loading {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .gallery {
+            margin: 4rem 0;
+        }
+        
+        .gallery h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .image-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .image-card .prompt {
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .social-icons a {
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .copyright {
+            margin-top: 1.5rem;
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+            
+            .nav-links a {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-magic"></i>
+                <span>ImagiGen</span>
+            </div>
+            <div class="nav-links">
+                <a href="<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImagiGen - AI Image Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: white;
+            color: var(--primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            color: #666;
+        }
+        
+        .generator-box {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .input-group input, 
+        .input-group textarea, 
+        .input-group select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        .input-group input:focus, 
+        .input-group textarea:focus, 
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .prompt-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .settings-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .setting {
+            flex: 1;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .image-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 500px;
+            display: none;
+        }
+        
+        .image-preview .placeholder {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .loading {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .gallery {
+            margin: 4rem 0;
+        }
+        
+        .gallery h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .image-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .image-card .prompt {
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .social-icons a {
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .copyright {
+            margin-top: 1.5rem;
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+            
+            .nav-links a {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-magic"></i>
+                <span>ImagiGen</span>
+            </div>
+            <div class="nav-links">
+                <a href="#">Home</a>
+                <a href="#">Gallery</a>
+                <a href="#">Pricing</a>
+                <a href="#">About</a>
+                <a href="#" class="btn btn-outline">Sign In</a>
+            </div>
+        </nav>
+    </header>
+    
+    <main class="container">
+        <section class="hero">
+            <h1>Turn Your Imagination into Art</h1>
+            <p>Create stunning AI-generated images with just a few words. No design skills needed - our powerful AI does all the work for you!</p>
+        </section>
+        
+        <section class="generator-box">
+            <div class="input-group">
+                <label for="prompt">Describe what you want to create</label>
+                <textarea id="prompt" class="prompt-input" placeholder="A majestic lion standing on a cliff at sunset, digital art style..."></textarea>
+            </div>
+            
+            <div class="settings-row">
+                <div class="input-group setting">
+                    <label for="style">Art Style</label>
+                    <select id="style">
+                        <option value="digital-art">Digital Art</option>
+                        <option value="photographic">Photographic</option>
+                        <option value="fantasy-art">Fantasy Art</option>
+                        <option value="anime">Anime</option>
+                        <option value="watercolor">Watercolor</option>
+                        <option value="3d-render">3D Render</option>
+                    </select>
+                </div>
+                
+                <div class="input-group setting">
+                    <label for="size">Image Size</label>
+                    <select id="size">
+                        <option value="512x512">512×512</option>
+                        <option value="768x768">768×768</option>
+                        <option value="1024x1024">1024×1024</option>
+                    </select>
+                </div>
+                
+                <div class="input-group setting">
+                    <label for="quality">Quality</label>
+                    <select id="quality">
+                        <option value="standard">Standard</option>
+                        <option value="hd">HD</option>
+                        <option value="ultra-hd">Ultra HD</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="generate-btn" class="btn btn-primary">
+                    <i class="fas fa-sparkles"></i> Generate Image
+                </button>
+                <button id="random-btn" class="btn">
+                    <i class="fas fa-random"></i> Random Prompt
+                </button>
+            </div>
+            
+            <div class="image-preview">
+                <div class="placeholder">
+                    <i class="fas fa-image" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                    <p>Your generated image will appear here</p>
+                </div>
+                <img id="generated-image" alt="Generated image">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Creating your masterpiece...</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="gallery">
+            <h2>Inspiration Gallery</h2>
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/6c5ce7/ffffff?text=AI+Art+1" alt="AI Generated Art">
+                    <div class="prompt">"Cyberpunk city at night with neon lights"</div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/a29bfe/ffffff?text=AI+Art+2" alt="AI Generated Art">
+                    <div class="prompt">"Portrait of a steampunk inventor"</div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/00b894/ffffff?text=AI+Art+3" alt="AI Generated Art">
+                    <div class="prompt">"Magical forest with glowing plants"</div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/fdcb6e/ffffff?text=AI+Art+4" alt="AI Generated Art">
+                    <div class="prompt">"Futuristic spaceship landing on alien planet"</div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="logo">
+                <i class="fas fa-magic"></i>
+                <span>ImagiGen</span>
+            </div>
+            <div class="footer-links">
+                <a href="<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImagiGen - AI Image Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --dark: #2d3436;
+            --light: #f5f6fa;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #d63031;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1.5rem;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: white;
+            color: var(--primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            color: #666;
+        }
+        
+        .generator-box {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .input-group input, 
+        .input-group textarea, 
+        .input-group select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        .input-group input:focus, 
+        .input-group textarea:focus, 
+        .input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .prompt-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .settings-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .setting {
+            flex: 1;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .image-preview {
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 500px;
+            display: none;
+        }
+        
+        .image-preview .placeholder {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .loading {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .gallery {
+            margin: 4rem 0;
+        }
+        
+        .gallery h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .image-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .image-card .prompt {
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+        }
+        
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .social-icons a {
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .copyright {
+            margin-top: 1.5rem;
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+            
+            .nav-links a {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-magic"></i>
+                <span>ImagiGen</span>
+            </div>
+            <div class="nav-links">
+                <a href="ai-image.html">Home</a>
+                <a href="ai-image.html">Gallery</a>
+                <a href="ai-image.html">Pricing</a>
+                <a href="ai-image.html">About</a>
+                <a href="ai-image.html" class="btn btn-outline">Sign In</a>
+            </div>
+        </nav>
+    </header>
+    
+    <main class="container">
+        <section class="hero">
+            <h1>Turn Your Imagination into Art</h1>
+            <p>Create stunning AI-generated images with just a few words. No design skills needed - our powerful AI does all the work for you!</p>
+        </section>
+        
+        <section class="generator-box">
+            <div class="input-group">
+                <label for="prompt">Describe what you want to create</label>
+                <textarea id="prompt" class="prompt-input" placeholder="A majestic lion standing on a cliff at sunset, digital art style..."></textarea>
+            </div>
+            
+            <div class="settings-row">
+                <div class="input-group setting">
+                    <label for="style">Art Style</label>
+                    <select id="style">
+                        <option value="digital-art">Digital Art</option>
+                        <option value="photographic">Photographic</option>
+                        <option value="fantasy-art">Fantasy Art</option>
+                        <option value="anime">Anime</option>
+                        <option value="watercolor">Watercolor</option>
+                        <option value="3d-render">3D Render</option>
+                    </select>
+                </div>
+                
+                <div class="input-group setting">
+                    <label for="size">Image Size</label>
+                    <select id="size">
+                        <option value="512x512">512×512</option>
+                        <option value="768x768">768×768</option>
+                        <option value="1024x1024">1024×1024</option>
+                    </select>
+                </div>
+                
+                <div class="input-group setting">
+                    <label for="quality">Quality</label>
+                    <select id="quality">
+                        <option value="standard">Standard</option>
+                        <option value="hd">HD</option>
+                        <option value="ultra-hd">Ultra HD</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="generate-btn" class="btn btn-primary">
+                    <i class="fas fa-sparkles"></i> Generate Image
+                </button>
+                <button id="random-btn" class="btn">
+                    <i class="fas fa-random"></i> Random Prompt
+                </button>
+            </div>
+            
+            <div class="image-preview">
+                <div class="placeholder">
+                    <i class="fas fa-image" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                    <p>Your generated image will appear here</p>
+                </div>
+                <img id="generated-image" alt="Generated image">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Creating your masterpiece...</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="gallery">
+            <h2>Inspiration Gallery</h2>
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/6c5ce7/ffffff?text=AI+Art+1" alt="AI Generated Art">
+                    <div class="prompt">"Cyberpunk city at night with neon lights"</div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/a29bfe/ffffff?text=AI+Art+2" alt="AI Generated Art">
+                    <div class="prompt">"Portrait of a steampunk inventor"</div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/00b894/ffffff?text=AI+Art+3" alt="AI Generated Art">
+                    <div class="prompt">"Magical forest with glowing plants"</div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/fdcb6e/ffffff?text=AI+Art+4" alt="AI Generated Art">
+                    <div class="prompt">"Futuristic spaceship landing on alien planet"</div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="logo">
+                <i class="fas fa-magic"></i>
+                <span>ImagiGen</span>
+            </div>
+            <div class="footer-links">
+                <a href="ai-image.html">Home</a>
+                <a href="ai-image.html">Features</a>
+                <a href="ai-image.html">Pricing</a>
+                <a href="ai-image.html">About</a>
+                <a href="ai-image.html">Contact</a>
+                <a href="ai-image.html">Privacy Policy</a>
+            </div>
+            <div class="social-icons">
+                <a href="ai-image.html"><i class="fab fa-twitter"></i></a>
+                <a href="ai-image.html"><i class="fab fa-instagram"></i></a>
+                <a href="ai-image.html"><i class="fab fa-facebook"></i></a>
+                <a href="ai-image.html"><i class="fab fa-discord"></i></a>
+            </div>
+            <div class="copyright">
+                &copy; 2023 ImagiGen AI. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        document.getElementById('generate-btn').addEventListener('click', async function() {
+            const prompt = document.getElementById('prompt').value.trim();
+            const style = document.getElementById('style').value;
+            const size = document.getElementById('size').value;
+            const quality = document.getElementById('quality').value;
+            
+            if (!prompt) {
+                alert('Please enter a description for your image');
+                return;
+            }
+            
+            const imagePreview = document.querySelector('.image-preview');
+            const generatedImage = document.getElementById('generated-image');
+            const loadingElement = document.querySelector('.loading');
+            const placeholder = document.querySelector('.placeholder');
+            
+            // Show loading state
+            loadingElement.style.display = 'flex';
+            placeholder.style.display = 'none';
+            generatedImage.style.display = 'none';
+            
+            try {
+                // In a real implementation, you would call your AI API here
+                // This is just a simulation for the demo
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Simulate getting an image (in real app, you would use the actual image from API)
+                const mockImages = [
+                    'https://source.unsplash.com/random/600x600/?ai,art',
+                    'https://source.unsplash.com/random/600x600/?digital,art',
+                    'https://source.unsplash.com/random/600x600/?fantasy',
+                    'https://source.unsplash.com/random/600x600/?cyberpunk',
+                    'https://source.unsplash.com/random/600x600/?future'
+                ];
+                
+                const randomImage = mockImages[Math.floor(Math.random() * mockImages.length)];
+                generatedImage.src = randomImage;
+                generatedImage.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = '<p style="color: var(--danger)">Error generating image. Please try again.</p>';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('random-btn').addEventListener('click', function() {
+            const randomPrompts = [
+                "A majestic dragon flying over a medieval castle at sunset",
+                "Cyberpunk cityscape with neon lights and flying cars",
+                "Portrait of a steampunk inventor with intricate goggles",
+                "Underwater scene with glowing jellyfish and coral reefs",
+                "Futuristic space station orbiting a gas giant planet",
+                "Magical forest with giant mushrooms and fairies",
+                "Samurai warrior standing in a bamboo forest",
+                "Surreal landscape with floating islands and waterfalls",
+                "Robot playing chess in a cozy library",
+                "Alien marketplace on a distant planet"
+            ];
+            
+            const randomPrompt = randomPrompts[Math.floor(Math.random() * randomPrompts.length)];
+            document.getElementById('prompt').value = randomPrompt;
+        });
+    </script>
+</body>
+</html>">Home</a>
+                <a href="ai-image.html">Features</a>
+                <a href="ai-image.html">Pricing</a>
+                <a href="ai-image.html">About</a>
+                <a href="ai-image.html">Contact</a>
+                <a href="ai-image.html">Privacy Policy</a>
+            </div>
+            <div class="social-icons">
+                <a href="ai-image.html"><i class="fab fa-twitter"></i></a>
+                <a href="ai-image.html"><i class="fab fa-instagram"></i></a>
+                <a href="ai-image.html"><i class="fab fa-facebook"></i></a>
+                <a href="ai-image.html"><i class="fab fa-discord"></i></a>
+            </div>
+            <div class="copyright">
+                &copy; 2023 ImagiGen AI. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        document.getElementById('generate-btn').addEventListener('click', async function() {
+            const prompt = document.getElementById('prompt').value.trim();
+            const style = document.getElementById('style').value;
+            const size = document.getElementById('size').value;
+            const quality = document.getElementById('quality').value;
+            
+            if (!prompt) {
+                alert('Please enter a description for your image');
+                return;
+            }
+            
+            const imagePreview = document.querySelector('.image-preview');
+            const generatedImage = document.getElementById('generated-image');
+            const loadingElement = document.querySelector('.loading');
+            const placeholder = document.querySelector('.placeholder');
+            
+            // Show loading state
+            loadingElement.style.display = 'flex';
+            placeholder.style.display = 'none';
+            generatedImage.style.display = 'none';
+            
+            try {
+                // In a real implementation, you would call your AI API here
+                // This is just a simulation for the demo
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Simulate getting an image (in real app, you would use the actual image from API)
+                const mockImages = [
+                    'https://source.unsplash.com/random/600x600/?ai,art',
+                    'https://source.unsplash.com/random/600x600/?digital,art',
+                    'https://source.unsplash.com/random/600x600/?fantasy',
+                    'https://source.unsplash.com/random/600x600/?cyberpunk',
+                    'https://source.unsplash.com/random/600x600/?future'
+                ];
+                
+                const randomImage = mockImages[Math.floor(Math.random() * mockImages.length)];
+                generatedImage.src = randomImage;
+                generatedImage.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = '<p style="color: var(--danger)">Error generating image. Please try again.</p>';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('random-btn').addEventListener('click', function() {
+            const randomPrompts = [
+                "A majestic dragon flying over a medieval castle at sunset",
+                "Cyberpunk cityscape with neon lights and flying cars",
+                "Portrait of a steampunk inventor with intricate goggles",
+                "Underwater scene with glowing jellyfish and coral reefs",
+                "Futuristic space station orbiting a gas giant planet",
+                "Magical forest with giant mushrooms and fairies",
+                "Samurai warrior standing in a bamboo forest",
+                "Surreal landscape with floating islands and waterfalls",
+                "Robot playing chess in a cozy library",
+                "Alien marketplace on a distant planet"
+            ];
+            
+            const randomPrompt = randomPrompts[Math.floor(Math.random() * randomPrompts.length)];
+            document.getElementById('prompt').value = randomPrompt;
+        });
+    </script>
+</body>
+</html>>Home</a>
+                <a href="">Gallery</a>
+                <a href="">Pricing</a>
+                <a href="">About</a>
+                <a href="" class="btn btn-outline">Sign In</a>
+            </div>
+        </nav>
+    </header>
+    
+    <main class="container">
+        <section class="hero">
+            <h1>Turn Your Imagination into Art</h1>
+            <p>Create stunning AI-generated images with just a few words. No design skills needed - our powerful AI does all the work for you!</p>
+        </section>
+        
+        <section class="generator-box">
+            <div class="input-group">
+                <label for="prompt">Describe what you want to create</label>
+                <textarea id="prompt" class="prompt-input" placeholder="A majestic lion standing on a cliff at sunset, digital art style..."></textarea>
+            </div>
+            
+            <div class="settings-row">
+                <div class="input-group setting">
+                    <label for="style">Art Style</label>
+                    <select id="style">
+                        <option value="digital-art">Digital Art</option>
+                        <option value="photographic">Photographic</option>
+                        <option value="fantasy-art">Fantasy Art</option>
+                        <option value="anime">Anime</option>
+                        <option value="watercolor">Watercolor</option>
+                        <option value="3d-render">3D Render</option>
+                    </select>
+                </div>
+                
+                <div class="input-group setting">
+                    <label for="size">Image Size</label>
+                    <select id="size">
+                        <option value="512x512">512×512</option>
+                        <option value="768x768">768×768</option>
+                        <option value="1024x1024">1024×1024</option>
+                    </select>
+                </div>
+                
+                <div class="input-group setting">
+                    <label for="quality">Quality</label>
+                    <select id="quality">
+                        <option value="standard">Standard</option>
+                        <option value="hd">HD</option>
+                        <option value="ultra-hd">Ultra HD</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="generate-btn" class="btn btn-primary">
+                    <i class="fas fa-sparkles"></i> Generate Image
+                </button>
+                <button id="random-btn" class="btn">
+                    <i class="fas fa-random"></i> Random Prompt
+                </button>
+            </div>
+            
+            <div class="image-preview">
+                <div class="placeholder">
+                    <i class="fas fa-image" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                    <p>Your generated image will appear here</p>
+                </div>
+                <img id="generated-image" alt="Generated image">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Creating your masterpiece...</p>
+                </div>
+            </div>
+        </section>
+        
+        <section class="gallery">
+            <h2>Inspiration Gallery</h2>
+            <div class="image-grid">
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/6c5ce7/ffffff?text=AI+Art+1" alt="AI Generated Art">
+                    <div class="prompt">"Cyberpunk city at night with neon lights"</div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/a29bfe/ffffff?text=AI+Art+2" alt="AI Generated Art">
+                    <div class="prompt">"Portrait of a steampunk inventor"</div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/00b894/ffffff?text=AI+Art+3" alt="AI Generated Art">
+                    <div class="prompt">"Magical forest with glowing plants"</div>
+                </div>
+                <div class="image-card">
+                    <img src="https://via.placeholder.com/300x200/fdcb6e/ffffff?text=AI+Art+4" alt="AI Generated Art">
+                    <div class="prompt">"Futuristic spaceship landing on alien planet"</div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="logo">
+                <i class="fas fa-magic"></i>
+                <span>ImagiGen</span>
+            </div>
+            <div class="footer-links">
+                <a href="ai-image.html">Home</a>
+                <a href="ai-image.html">Features</a>
+                <a href="ai-image.html">Pricing</a>
+                <a href="ai-image.html">About</a>
+                <a href="ai-image.html">Contact</a>
+                <a href="ai-image.html">Privacy Policy</a>
+            </div>
+            <div class="social-icons">
+                <a href="ai-image.html"><i class="fab fa-twitter"></i></a>
+                <a href="ai-image.html"><i class="fab fa-instagram"></i></a>
+                <a href="ai-image.html"><i class="fab fa-facebook"></i></a>
+                <a href="ai-image.html"><i class="fab fa-discord"></i></a>
+            </div>
+            <div class="copyright">
+                &copy; 2023 ImagiGen AI. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        document.getElementById('generate-btn').addEventListener('click', async function() {
+            const prompt = document.getElementById('prompt').value.trim();
+            const style = document.getElementById('style').value;
+            const size = document.getElementById('size').value;
+            const quality = document.getElementById('quality').value;
+            
+            if (!prompt) {
+                alert('Please enter a description for your image');
+                return;
+            }
+            
+            const imagePreview = document.querySelector('.image-preview');
+            const generatedImage = document.getElementById('generated-image');
+            const loadingElement = document.querySelector('.loading');
+            const placeholder = document.querySelector('.placeholder');
+            
+            // Show loading state
+            loadingElement.style.display = 'flex';
+            placeholder.style.display = 'none';
+            generatedImage.style.display = 'none';
+            
+            try {
+                // In a real implementation, you would call your AI API here
+                // This is just a simulation for the demo
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Simulate getting an image (in real app, you would use the actual image from API)
+                const mockImages = [
+                    'https://source.unsplash.com/random/600x600/?ai,art',
+                    'https://source.unsplash.com/random/600x600/?digital,art',
+                    'https://source.unsplash.com/random/600x600/?fantasy',
+                    'https://source.unsplash.com/random/600x600/?cyberpunk',
+                    'https://source.unsplash.com/random/600x600/?future'
+                ];
+                
+                const randomImage = mockImages[Math.floor(Math.random() * mockImages.length)];
+                generatedImage.src = randomImage;
+                generatedImage.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                placeholder.style.display = 'block';
+                placeholder.innerHTML = '<p style="color: var(--danger)">Error generating image. Please try again.</p>';
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('random-btn').addEventListener('click', function() {
+            const randomPrompts = [
+                "A majestic dragon flying over a medieval castle at sunset",
+                "Cyberpunk cityscape with neon lights and flying cars",
+                "Portrait of a steampunk inventor with intricate goggles",
+                "Underwater scene with glowing jellyfish and coral reefs",
+                "Futuristic space station orbiting a gas giant planet",
+                "Magical forest with giant mushrooms and fairies",
+                "Samurai warrior standing in a bamboo forest",
+                "Surreal landscape with floating islands and waterfalls",
+                "Robot playing chess in a cozy library",
+                "Alien marketplace on a distant planet"
+            ];
+            
+            const randomPrompt = randomPrompts[Math.floor(Math.random() * randomPrompts.length)];
+            document.getElementById('prompt').value = randomPrompt;
+        });
+    </script>
+</body>
+</html>
